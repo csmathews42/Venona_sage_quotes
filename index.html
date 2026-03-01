@@ -3,45 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Inspiration</title>
+    <title>Venona Sage Quotes</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); max-width: 80%; text-align: center; }
-        h1 { font-size: 1.8rem; margin-bottom: 20px; line-height: 1.4; font-style: italic; }
-        .category { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        button { margin-top: 30px; padding: 10px 20px; border: none; border-radius: 50px; background: #764ba2; color: white; cursor: pointer; font-weight: bold; }
+        /* Modern dark theme with a hint of gold to match the logo */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #121212; color: #e0e0e0; }
+        .container { text-align: center; max-width: 90%; width: 500px; padding: 20px; }
+        .logo-box { max-width: 150px; margin: 0 auto 30px; }
+        .logo-box img { width: 100%; height: auto; border-radius: 50%; border: 2px solid #b39130; box-shadow: 0 5px 15px rgba(179, 145, 48, 0.5); }
+        .quote-card { background-color: #1e1e1e; padding: 40px; border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.7); }
+        .category { font-size: 0.9rem; color: #b39130; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+        .quote-text { font-size: 1.6rem; line-height: 1.4; font-style: italic; font-weight: 300; margin-bottom: 30px; margin-top: 0; }
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 30px; }
+        button { padding: 12px 24px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: background-color 0.2s, transform 0.1s; }
+        button:active { transform: scale(0.98); }
+        .btn-new { background-color: #b39130; color: #121212; }
+        .btn-new:hover { background-color: #d4ac3e; }
+        .btn-share { background-color: transparent; color: #b39130; border: 2px solid #b39130; padding: 10px 22px; }
+        .btn-share:hover { background-color: rgba(179, 145, 48, 0.1); }
+        /* Style for the QR code display, used in Step 3 */
+        #qr-container { margin-top: 40px; display: none; }
+        #qr-container canvas { border: 10px solid white; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1 id="quote-text">Loading inspiration...</h1>
-        <div id="quote-category" class="category"></div>
-        <button onclick="location.reload()">Get Another Quote</button>
+    <div class="container">
+        <div class="logo-box">
+            <img src="logo.png" alt="Venona Sage Logo">
+        </div>
+        <div class="quote-card">
+            <div id="quote-category" class="category"></div>
+            <p id="quote-text" class="quote-text">Loading wisdom...</p>
+            <div class="button-group">
+                <button class="btn-new" onclick="location.reload()">Next Quote</button>
+                <button class="btn-share" onclick="shareQuoteText()">Share Quote</button>
+                <button class="btn-share" onclick="generateAndShareQR()">Share QR Code</button>
+            </div>
+        </div>
+        <div id="qr-container">
+            <div id="qrcode"></div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+
     <script>
-        // Directly pointing to your new master file
+        // Directly pointing to your 'master_quotes.json' on GitHub
         const jsonUrl = 'https://raw.githubusercontent.com/csmathews42/Venona_sage_quotes/main/master_quotes.json';
+        let currentQuoteData = {};
 
         async function getQuote() {
             try {
                 const response = await fetch(jsonUrl);
                 const data = await response.json();
                 
-                // Get a random category
+                // Get all category names
                 const categories = Object.keys(data);
-                const randomCategory = categories[Math.floor(Math.random() * categories.length)];
                 
-                // Get a random quote from that category
-                const quotes = data[randomCategory];
-                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                // Pick a random category
+                const randomCat = categories[Math.floor(Math.random() * categories.length)];
                 
+                // Pick a random quote from that category
+                const quotesList = data[randomCat];
+                const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
+                
+                currentQuoteData = { text: randomQuote, category: randomCat };
+
                 document.getElementById('quote-text').innerText = `"${randomQuote}"`;
-                document.getElementById('quote-category').innerText = randomCategory.replace(/([A-Z])/g, ' $1').trim();
+                // Capitalize and format the category name
+                document.getElementById('quote-category').innerText = randomCat.replace(/([A-Z])/g, ' $1').trim();
             } catch (error) {
-                document.getElementById('quote-text').innerText = "Could not load quote. Try refreshing!";
+                document.getElementById('quote-text').innerText = "Oops! Could not load wisdom. Try refreshing.";
                 console.error(error);
             }
+        }
+
+        // --- NEW SHARING FUNCTIONS ---
+
+        // 1. "Share Quote" Button: Shares text + website link
+        async function shareQuoteText() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Venona Sage Wisdom',
+                        text: `"${currentQuoteData.text}" - (Category: ${currentQuoteData.category})`,
+                        url: window.location.href // Shares the current website URL
+                    });
+                    console.log('Quote text shared successfully!');
+                } catch (error) {
+                    console.log('Error sharing text:', error);
+                }
+            } else {
+                alert("Sharing is not supported on this browser. Try copying the quote text!");
+            }
+        }
+
+        // 2. "Share QR Code" Button: Generates and shares QR as a PNG image file
+        async function generateAndShareQR() {
+            if (!navigator.share) {
+                alert("Sharing is not supported on this browser.");
+                return;
+            }
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = ''; // Clear previous QR
+
+            // Use the qrcode.js library to draw the QR code for your website onto a canvas
+            QRCode.toCanvas(qrContainer, window.location.href, { margin: 1, color: { dark: '#121212', light: '#ffffff' } }, function (error, canvas) {
+                if (error) {
+                    console.error('QR code generation error:', error);
+                    alert("Could not generate QR code.");
+                    return;
+                }
+
+                // Temporary view of the QR code (some browsers require visibility to share canvas)
+                const qrWrapper = document.getElementById('qr-container');
+                qrWrapper.style.display = 'block';
+
+                // Convert canvas to a PNG image data URL
+                const dataUrl = canvas.toDataURL('image/png');
+
+                // Convert the PNG data URL into a standard Blob (file object)
+                fetch(dataUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    const filesArray = [
+                        new File([blob], 'venona-sage-qr.png', { type: 'image/png' })
+                    ];
+
+                    // Share the file via Web Share API
+                    if (navigator.canShare && navigator.canShare({ files: filesArray })) {
+                        return navigator.share({
+                            title: 'Venona Sage QR Code',
+                            text: 'Scan to receive ancient wisdom and future insights!',
+                            files: filesArray,
+                        });
+                    } else {
+                        throw new Error('This browser cannot share image files.');
+                    }
+                })
+                .then(() => {
+                    console.log('QR Code image shared successfully!');
+                })
+                .catch((error) => {
+                    console.log('Error sharing QR image:', error);
+                    alert("Sharing failed. You can save the QR code image shown below by right-clicking it.");
+                })
+                .finally(() => {
+                    // Always keep the backup QR code visible on screen
+                    qrWrapper.style.display = 'block';
+                });
+            });
         }
 
         getQuote();
