@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Inspiration</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); max-width: 80%; text-align: center; }
+        h1 { font-size: 1.8rem; margin-bottom: 20px; line-height: 1.4; font-style: italic; }
+        .category { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        button { margin-top: 30px; padding: 10px 20px; border: none; border-radius: 50px; background: #764ba2; color: white; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 id="quote-text">Loading inspiration...</h1>
+        <div id="quote-category" class="category"></div>
+        <button onclick="location.reload()">Get Another Quote</button>
+    </div>
+
+    <script>
+        // Directly pointing to your new master file
+        const jsonUrl = 'https://raw.githubusercontent.com/csmathews42/Venona_sage_quotes/main/master_quotes.json';
+
+        async function getQuote() {
+            try {
+                const response = await fetch(jsonUrl);
+                const data = await response.json();
+                
+                // Get a random category
+                const categories = Object.keys(data);
+                const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+                
+                // Get a random quote from that category
+                const quotes = data[randomCategory];
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                
+                document.getElementById('quote-text').innerText = `"${randomQuote}"`;
+                document.getElementById('quote-category').innerText = randomCategory.replace(/([A-Z])/g, ' $1').trim();
+            } catch (error) {
+                document.getElementById('quote-text').innerText = "Could not load quote. Try refreshing!";
+                console.error(error);
+            }
+        }
+
+        getQuote();
+    </script>
+</body>
+</html>
